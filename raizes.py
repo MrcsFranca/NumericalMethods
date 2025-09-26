@@ -66,14 +66,18 @@ def bissec(a, b, precisao, maxIt, formula):
                 a = meio
             
             print(f"{k:<10} {a:<18.8f} {b:<18.8f} {math.fabs(meio):<18.8f}")
-        print(f"=====A raiz {meio} foi encontrada em {k} iterações")
+        
+        if k >= maxIt:
+            print("A função, provavelmente, e divergente")
+        else:
+            print(f"=====A raiz {meio} foi encontrada em {k} iterações")
 
 def mpf(x0, precisao, maxIt, formula, formulaIter):
     k = 0
     print(f"{'Iter (k)':<10} {'x0':<18} {'x1':<18} {'Erro':<18}")
 
     if math.fabs(funcExec(x0, formula)) < precisao:
-        print(f"{k:<10} {x0:<18.8f} {x1:<18.8f} {math.fabs(funcExec(x0, formula)):<18.8f}")
+        print(f"{k:<10} {x0:<18.8f} 0.00000000 {math.fabs(funcExec(x0, formula)):<18.8f}")
         print(f"=====A raiz {x0} foi encontrada em {k} iterações")
         return
     
@@ -88,15 +92,15 @@ def mpf(x0, precisao, maxIt, formula, formulaIter):
 
         x0 = x1 
 
-    print("A funcao chegou ao seu limite de iterações")
-    print(f"=====A raiz {x1} foi encontrada em {k} iterações")
+    if k >= maxIt:
+        print("A função, provavelmente, e divergente")
 
 def newton(x0, precisao, maxIt, formula, formulaDer):
     k = 0
     print(f"{'Iter (k)':<10} {'x0':<18} {'x1':<18} {'Erro':<18}")
 
     if math.fabs(funcExec(x0, formula)) < precisao:
-        print(f"{k:<10} {x0:<18.8f} {x1:<18.8f} {math.fabs(funcExec(x0, formula)):<18.8f}")
+        print(f"{k:<10} {x0:<18.8f} 0.00000000 {math.fabs(funcExec(x0, formula)):<18.8f}")
         print(f"=====A raiz {x0} foi encontrada em {k} iterações")
         return
 
@@ -111,8 +115,8 @@ def newton(x0, precisao, maxIt, formula, formulaDer):
 
         x0 = x1
 
-    print("A funcao chegou ao seu limite de iterações")
-    print(f"=====A raiz {x1} foi encontrada em {k} iterações")
+    if k >= maxIt:
+        print("A função, provavelmente, e divergente")
 
 def secante(x0, x1, precisao, maxIt, formula):
     k = 0
@@ -140,8 +144,8 @@ def secante(x0, x1, precisao, maxIt, formula):
         x0 = x1
         x1 = x2
 
-    print("A funcao chegou ao seu limite de iterações")
-    print(f"=====A raiz {x2} foi encontrada em {k} iterações")
+    if k >= maxIt:
+        print("A função, provavelmente, e divergente")
 
 def regulaFalsi(a, b, precisao, maxIt, formula):
     k = 0
@@ -178,8 +182,8 @@ def regulaFalsi(a, b, precisao, maxIt, formula):
             a = x
             fa = fx
 
-    print("A funcao chegou ao seu limite de iterações")
-    print(f"=====A raiz {x} foi encontrada em {k} iterações")
+    if k >= maxIt:
+        print("A função, provavelmente, e divergente")
 
 if __name__ == "__main__":
     a = float(input("Insira o limite menor: "))
