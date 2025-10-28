@@ -81,7 +81,12 @@ def LUDecomposition(A, results):
     for _ in range(numVariables):
         y.append(0.0)
         x.append(0.0)
-        L.append[[0.0]]
+        line = []
+        for _ in range(numVariables):
+            line.append(0.0)
+        L.append(line)
+
+    print(L)
 
 
 def fatoracaoLUComGauss():
