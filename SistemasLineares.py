@@ -24,7 +24,7 @@ def gaussElimination(A, results):
 
     x[numVariables - 1] = results[numVariables - 1] / A[numVariables - 1, numVariables - 1]
     for i in range(numVariables - 1, -1, -1):
-        sum = 0
+        aux = 0
         for j in range(i + 1, numVariables):
             aux += A[i, j] * x[j]
 
@@ -75,8 +75,8 @@ def pivoteamentoCompleto():
 
 def LUDecomposition(A, results):
     numVariables = len(results)
-    x = np.zeros([numVariables, numVariables])
-    y = np.zeros([numVariables, numVariables])
+    x = np.zeros(numVariables)
+    y = np.zeros(numVariables)
     U = A
     L = np.zeros([numVariables, numVariables])
     for i in range(0, numVariables):
@@ -95,15 +95,25 @@ def LUDecomposition(A, results):
             for k in range(0, numVariables):
                 A[i, j] += L[i, k] * U[k, j]
 
-    print(L)
-    print()
-    print(U)
-    print()
-    print(A)
+    y = np.zeros(numVariables)
+    for i in range(numVariables):
+        aux = 0
+        for j in range(i):
+            aux += L[i, j] * y[j]
+        
+        y[i] = results[i] - aux
 
+    x = np.zeros(numVariables)
+    for i in range(numVariables - 1, -1, -1): 
+        aux = 0
+        for j in range(i + 1, numVariables):
+            aux += U[i, j] * x[j]
+        
+        x[i] = (y[i] - aux) / U[i, i]
 
-def fatoracaoLUComGauss():
-    print("fatoracao LU com gauss")
+    print("O resultado é:")
+    for result in range(len(x)):
+        print(f'x[{result}] = {x[result]}')
 
 def fatoracaoCholensky():
     print("Cholensky")
@@ -130,7 +140,6 @@ def testeDeParada():
 # Execução
 
 if __name__ == "__main__":
-    """
     A = array([[3, 1, 0, -1],
                [1, 3, 1, 1],
                [0, 1, 3, -1],
@@ -154,5 +163,11 @@ if __name__ == "__main__":
 
     results = np.array([5, 7, 2, 3, 4], dtype=float)
 
+    A = np.array([[4, -2, 1],
+                  [20, -7, 12],
+                  [-8, 13, 17]], dtype=float)
+
+    results = np.array([5, 7, 2], dtype=float)
+    """
 
     LUDecomposition(A, results)
