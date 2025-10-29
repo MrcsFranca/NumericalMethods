@@ -1,4 +1,5 @@
 from numpy import array, zeros, fabs
+import numpy as np
 
 def calcDeterminante():
     print("det")
@@ -74,19 +75,31 @@ def pivoteamentoCompleto():
 
 def LUDecomposition(A, results):
     numVariables = len(results)
-    x = []
-    y = []
+    x = np.zeros([numVariables, numVariables])
+    y = np.zeros([numVariables, numVariables])
     U = A
-    L = [[]]
-    for _ in range(numVariables):
-        y.append(0.0)
-        x.append(0.0)
-        line = []
-        for _ in range(numVariables):
-            line.append(0.0)
-        L.append(line)
+    L = np.zeros([numVariables, numVariables])
+    for i in range(0, numVariables):
+        for j in range(0, numVariables):
+            if i == j:
+                L[i, j] = 1
+            if i < j:
+                multiplier = A[j, i] / A[i, i]
+                L[j, i] = multiplier
+                for k in range(0, numVariables):
+                    U[j, k] = A[j, k] - A[i, k] * multiplier
+
+    A = np.zeros([numVariables, numVariables])
+    for i in range(0, numVariables):
+        for j in range(0, numVariables):
+            for k in range(0, numVariables):
+                A[i, j] += L[i, k] * U[k, j]
 
     print(L)
+    print()
+    print(U)
+    print()
+    print(A)
 
 
 def fatoracaoLUComGauss():
@@ -126,20 +139,20 @@ if __name__ == "__main__":
     results = array([10, 15, 10, 0], dtype=float)
     """
 
-    A = array([[1, 1, 1, 1],
+    A = np.array([[1, 1, 1, 1],
                [1, -1, 2, -1],
                [2, 1, -1, 1],
                [3, -1, -1, -2]], dtype=float)
 
     results = array([5, -6, 8, -4], dtype=float)
 
-    A = array([[0, 7, -1, 3, 1],
+    A = np.array([[0, 7, -1, 3, 1],
                [0, 3, 4, 1, 7],
                [6, 2, 0, 2, -1],
                [2, 1, 2, 0, 2],
                [3, 4, 1, -2, 1]], dtype=float)
 
-    results = array([5, 7, 2, 3, 4], dtype=float)
+    results = np.array([5, 7, 2, 3, 4], dtype=float)
 
 
     LUDecomposition(A, results)
