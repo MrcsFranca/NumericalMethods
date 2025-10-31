@@ -1,11 +1,19 @@
-from numpy import array, zeros, fabs
 import numpy as np
+import math
 
-def calcDeterminante():
-    print("det")
+def subDeterminant(A):
+    n = len(A)
+    subMatrixList = []
+    for subSize in (0, n):
+        subMatrix = A[0:subSize, 0:subSize]
+        subMatrixList.append(np.linalg.det(subMatrix))
+    return subMatrixList
 
 # Metodos diretos
 def gaussElimination(A, results):
+    if np.linalg.det(A) == 0:
+        return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
     numVariables = len(results)
     x = []
     for _ in range(numVariables):
@@ -35,6 +43,9 @@ def gaussElimination(A, results):
         print(f'x[{result}] = {x[result]}')
 
 def partialPivoting(A, results):
+    if np.linalg.det(A) == 0:
+        return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
     numVariables = len(results)
     x = []
     for _ in range(numVariables):
@@ -69,11 +80,15 @@ def partialPivoting(A, results):
     for result in range(len(x)):
         print(f'x[{result}] = {x[result]}')
 
-
 def pivoteamentoCompleto():
     print("pivoteamento completo")
 
 def LUDecomposition(A, results):
+    subMatrixList = subDeterminant(A)
+    for sub in subMatrixList:
+        if sub == 0:
+            return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
     numVariables = len(results)
     x = np.zeros(numVariables)
     y = np.zeros(numVariables)
@@ -115,8 +130,51 @@ def LUDecomposition(A, results):
     for result in range(len(x)):
         print(f'x[{result}] = {x[result]}')
 
-def fatoracaoCholensky():
-    print("Cholensky")
+def choleskyFac(A, B):
+    subMatrixList = subDeterminant(A)
+    for sub in subMatrixList:
+        if sub <= 0:
+            return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
+    numVariables = len(A)
+    x = np.zeros(numVariables)
+
+    for i in range(numVariables):
+        for j in range(i + 1, numVariables):
+            if A[i, j] != A[j, i]:
+                return "A matriz não é simétrica, logo não pode ser resolvida por este método por este método"
+
+    auxMatrix = np.zeros((numVariables, numVariables), dtype = float)
+    sumAux = 0
+    for i in range(numVariables):
+        sumAux = sum(auxMatrix[i, j] ** 2 for j in range(i))
+        auxMatrix[i, i] = math.sqrt(A[i, i] - sumAux)
+
+        for j in range(i + 1, numVariables):
+            sumAux = sum(auxMatrix[i, k] * auxMatrix[j, k] for k in range(i))
+            auxMatrix[j, i] = (A[j, i] - sumAux) / auxMatrix[i, i]
+
+    transposeMatrix = auxMatrix.transpose()
+    y = np.zeros(numVariables)
+
+    for i in range(numVariables):
+        sumAux = B[i]
+        for j in range(i):
+            sumAux -= auxMatrix[i, j] * y[j]
+        y[i] = sumAux / auxMatrix[i, i]
+
+    for i in range(numVariables - 1, -1, -1):
+        aux = y[i]
+        for j in range(i + 1, numVariables):
+            aux -= transposeMatrix[i, j] * x[j]
+
+        x[i] = aux / transposeMatrix[i, i]
+
+    print("O resultado é:")
+    for result in range(len(x)):
+        print(f'x[{result}] = {x[result]}')
+
+    return x
 
 def criterioDeParada():
     print("criterio de parada")
@@ -140,20 +198,20 @@ def testeDeParada():
 # Execução
 
 if __name__ == "__main__":
-    A = array([[3, 1, 0, -1],
+    A = np.array([[3, 1, 0, -1],
                [1, 3, 1, 1],
                [0, 1, 3, -1],
                [-1, 1, -1, 4]], dtype=float)
 
-    results = array([10, 15, 10, 0], dtype=float)
-    """
+    results = np.array([10, 15, 10, 0], dtype=float)
 
+    """
     A = np.array([[1, 1, 1, 1],
                [1, -1, 2, -1],
                [2, 1, -1, 1],
                [3, -1, -1, -2]], dtype=float)
 
-    results = array([5, -6, 8, -4], dtype=float)
+    results = np.array([5, -6, 8, -4], dtype=float)
 
     A = np.array([[0, 7, -1, 3, 1],
                [0, 3, 4, 1, 7],
@@ -170,4 +228,4 @@ if __name__ == "__main__":
     results = np.array([5, 7, 2], dtype=float)
     """
 
-    LUDecomposition(A, results)
+    print(gaussElimination(A, results))
