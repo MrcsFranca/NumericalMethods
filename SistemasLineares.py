@@ -16,11 +16,12 @@ def gaussElimination(A, results):
 
     numVariables = len(results)
     x = []
-    for _ in range(numVariables):
-        x.append(0.0)
+    x = np.zeros(numVariables)
     
     for i in range(numVariables - 1): 
         for j in range(i + 1, numVariables):
+            if A[i, i] == 0:
+                return "Foi encontrada um divisão por 0"
             if A[j, i] == 0:
                 continue
 
@@ -47,41 +48,107 @@ def partialPivoting(A, results):
         return "A matriz tem determinante igual a 0, logo não tem solução por este método"
 
     numVariables = len(results)
-    x = []
-    for _ in range(numVariables):
-        x.append(0.0)
+    x = np.zeros(numVariables)
     
-    for i in range(numVariables - 1): 
-        if fabs(A[i, i]) < 1.0e-12:
-            for k in range(i + 1, numVariables):
-                if fabs(A[k, i]) > fabs(A[i, i]):
-                    A[[i, k]] = A[[k, i]]
-                    results[[i, k]] = results[[k, i]]
-                    break
+    for i in range(numVariables):
+        pivotLine = i
+        maxValue = math.fabs(A[i, i])
+        for j in range(i + 1, numVariables):
+            if math.fabs(A[j, i]) > maxValue:
+                pivotLine = j
+                maxValue = math.fabs(A[j, i])
+        if pivotLine != i:
+            A[[i, pivotLine]] = A[[pivotLine, i]]
+            results[[i, pivotLine]] = results[[pivotLine, i]]
+
+        pivot = A[i, i]
+
+        if pivot == 0:
+            return "Foi encontrada um divisão por 0"
+
         for j in range(i + 1, numVariables):
             if A[j, i] == 0:
                 continue
+            
+            multiplier = A[j, i] / pivot
+            A[j] = A[j] - A[i] * multiplier
+            results[j] = results[j] - results[i] * multiplier
 
-            multiplier = A[j, i] / A[i, i]
+    x[numVariables - 1] = results[numVariables - 1] / A[numVariables - 1, numVariables - 1]
+    for i in range(numVariables - 2, -1, -1):
+        aux = 0
+        for j in range(i + 1, numVariables):
+            aux += A[i, j] * x[j]
 
+        x[i] = (results[i] - aux) / A[i, i]
+
+    print("O resultado é:")
+    for result in range(len(x)):
+        print(f'x[{result}] = {x[result]}')
+    
+    return x
+
+def completePivoting(A, results):
+    if np.linalg.det(A) == 0:
+        return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
+    numVariables = len(results)
+    x = np.zeros(numVariables)
+
+    changeCol = np.arange(numVariables)
+
+    for i in range(numVariables - 1):
+        pivotLine = i
+        pivotColumn = i
+        maxValue = math.fabs(A[i, i])
+
+        for j in range(i, numVariables):
             for k in range(i, numVariables):
-                A[j, k] = A[j, k] - A[i, k] * multiplier
+                if math.fabs(A[j, k]) > maxValue:
+                    pivotLine = j
+                    pivotColumn = k
+                    maxValue = math.fabs(A[j, k])
+                
+        if pivotLine != i:
+            A[[i, pivotLine]] = A[[pivotLine, i]]
+            results[[i, pivotLine]] = results[[pivotLine, i]]
+
+        if pivotColumn != i:
+            A[:, [i, pivotColumn]] = A[:, [pivotColumn, i]]
+            changeCol[[i, pivotColumn]] = changeCol[[pivotColumn, i]]
+
+        pivot = A[i, i]
+
+        if pivot == 0:
+            return "Foi encontrada um divisão por 0"
+
+        for j in range(i + 1, numVariables):
+            if A[j, i] == 0:
+                continue
+            
+            multiplier = A[j, i] / pivot
+            A[j] = A[j] - A[i] * multiplier
             results[j] = results[j] - results[i] * multiplier
 
     x[numVariables - 1] = results[numVariables - 1] / A[numVariables - 1, numVariables - 1]
     for i in range(numVariables - 1, -1, -1):
         aux = 0
         for j in range(i + 1, numVariables):
-            aux += A[i, j] * x[j]
+            aux += (A[i, j] * x[j])
 
         x[i] = (results[i] - aux) / A[i, i]
+
     
+    xResult = np.zeros_like(x)
+    for i in range(numVariables):
+        xResult[changeCol[i]] = x[i]
+    
+
     print("O resultado é:")
     for result in range(len(x)):
-        print(f'x[{result}] = {x[result]}')
+        print(f'x[{result}] = {xResult[result]}')
 
-def pivoteamentoCompleto():
-    print("pivoteamento completo")
+    return xResult
 
 def LUDecomposition(A, results):
     subMatrixList = subDeterminant(A)
@@ -95,6 +162,8 @@ def LUDecomposition(A, results):
     U = A
     L = np.zeros([numVariables, numVariables])
     for i in range(0, numVariables):
+        if A[i, i] == 0:
+            return "Foi encontrada um divisão por 0"
         for j in range(0, numVariables):
             if i == j:
                 L[i, j] = 1
@@ -134,7 +203,7 @@ def choleskyFac(A, B):
     subMatrixList = subDeterminant(A)
     for sub in subMatrixList:
         if sub <= 0:
-            return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+            return "A matriz tem determinante menor ou igual a 0, logo não tem solução por este método"
 
     numVariables = len(A)
     x = np.zeros(numVariables)
@@ -142,7 +211,7 @@ def choleskyFac(A, B):
     for i in range(numVariables):
         for j in range(i + 1, numVariables):
             if A[i, j] != A[j, i]:
-                return "A matriz não é simétrica, logo não pode ser resolvida por este método por este método"
+                return "A matriz não é simétrica, logo não pode ser resolvida por este método"
 
     auxMatrix = np.zeros((numVariables, numVariables), dtype = float)
     sumAux = 0
@@ -176,9 +245,6 @@ def choleskyFac(A, B):
 
     return x
 
-def criterioDeParada():
-    print("criterio de parada")
-
 # Metodos iterativos
 def convergenciaGaussJacobi():
     print("convergencia gauss jacobi")
@@ -198,34 +264,44 @@ def testeDeParada():
 # Execução
 
 if __name__ == "__main__":
-    A = np.array([[3, 1, 0, -1],
+    """
+    matA = np.array([[3, 1, 0, -1],
                [1, 3, 1, 1],
                [0, 1, 3, -1],
                [-1, 1, -1, 4]], dtype=float)
 
-    results = np.array([10, 15, 10, 0], dtype=float)
+    matResults = np.array([10, 15, 10, 0], dtype=float)
 
-    """
-    A = np.array([[1, 1, 1, 1],
+
+    matA = np.array([[1, 1, 1, 1],
                [1, -1, 2, -1],
                [2, 1, -1, 1],
                [3, -1, -1, -2]], dtype=float)
 
-    results = np.array([5, -6, 8, -4], dtype=float)
+    matResults = np.array([5, -6, 8, -4], dtype=float)
 
-    A = np.array([[0, 7, -1, 3, 1],
+    matA = np.array([[0, 7, -1, 3, 1],
                [0, 3, 4, 1, 7],
                [6, 2, 0, 2, -1],
                [2, 1, 2, 0, 2],
                [3, 4, 1, -2, 1]], dtype=float)
 
-    results = np.array([5, 7, 2, 3, 4], dtype=float)
+    matResults = np.array([5, 7, 2, 3, 4], dtype=float)
 
-    A = np.array([[4, -2, 1],
+    matA = np.array([[4, -2, 1],
                   [20, -7, 12],
                   [-8, 13, 17]], dtype=float)
 
-    results = np.array([5, 7, 2], dtype=float)
+    matResults = np.array([5, 7, 2], dtype=float)
     """
 
-    print(gaussElimination(A, results))
+    print("gaus:")
+    print(gaussElimination(matA.copy(), matResults.copy()))
+    print("parcial:")
+    print(partialPivoting(matA.copy(), matResults.copy()))
+    print("completo:")
+    print(completePivoting(matA.copy(), matResults.copy()))
+    print("LU:")
+    print(LUDecomposition(matA.copy(), matResults.copy()))
+    print("cholesky:")
+    print(choleskyFac(matA.copy(), matResults.copy()))
