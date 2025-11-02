@@ -1,6 +1,41 @@
 import numpy as np
 import math
 
+def openFile(file):
+    matList = []
+    try:
+        with open(file, "r") as file:
+            for line in file:
+                blankLine = line.strip()
+
+                if not blankLine or blankLine.startswith('#'):
+                    continue
+
+                numsStr = blankLine.split()
+                numsFloat = [float(num) for num in numsStr]
+                matList.append(numsFloat)
+
+    except FileNotFoundError:
+        print(f"O arquivo '{file}' não foi encontrado")
+        return None, None
+    except ValueError:
+        print(f"O arquivo '{file}' contém caracteres inválidos")
+        return None, None
+
+    if not matList:
+        print("Arquivo vazio ou não lido")
+        return None, None
+
+    matrix = np.array(matList, dtype=float)
+    A = matrix[:, :-1]
+    results = matrix[:, -1]
+    print("matriz A")
+    print(A)
+    print("resultados")
+    print(results)
+
+    return A, results
+
 def subDeterminant(A):
     n = len(A)
     subMatrixList = []
@@ -264,44 +299,20 @@ def testeDeParada():
 # Execução
 
 if __name__ == "__main__":
-    """
-    matA = np.array([[3, 1, 0, -1],
-               [1, 3, 1, 1],
-               [0, 1, 3, -1],
-               [-1, 1, -1, 4]], dtype=float)
+    matA, matResults = openFile("sistema.txt")
+    if matA is not None and matResults is not None:
+        print("matriz A")
+        print(matA)
+        print("resultados")
+        print(matResults)
 
-    matResults = np.array([10, 15, 10, 0], dtype=float)
-
-
-    matA = np.array([[1, 1, 1, 1],
-               [1, -1, 2, -1],
-               [2, 1, -1, 1],
-               [3, -1, -1, -2]], dtype=float)
-
-    matResults = np.array([5, -6, 8, -4], dtype=float)
-
-    matA = np.array([[0, 7, -1, 3, 1],
-               [0, 3, 4, 1, 7],
-               [6, 2, 0, 2, -1],
-               [2, 1, 2, 0, 2],
-               [3, 4, 1, -2, 1]], dtype=float)
-
-    matResults = np.array([5, 7, 2, 3, 4], dtype=float)
-
-    matA = np.array([[4, -2, 1],
-                  [20, -7, 12],
-                  [-8, 13, 17]], dtype=float)
-
-    matResults = np.array([5, 7, 2], dtype=float)
-    """
-
-    print("gaus:")
-    print(gaussElimination(matA.copy(), matResults.copy()))
-    print("parcial:")
-    print(partialPivoting(matA.copy(), matResults.copy()))
-    print("completo:")
-    print(completePivoting(matA.copy(), matResults.copy()))
-    print("LU:")
-    print(LUDecomposition(matA.copy(), matResults.copy()))
-    print("cholesky:")
-    print(choleskyFac(matA.copy(), matResults.copy()))
+        print("gaus:")
+        print(gaussElimination(matA.copy(), matResults.copy()))
+        print("parcial:")
+        print(partialPivoting(matA.copy(), matResults.copy()))
+        print("completo:")
+        print(completePivoting(matA.copy(), matResults.copy()))
+        print("LU:")
+        print(LUDecomposition(matA.copy(), matResults.copy()))
+        print("cholesky:")
+        print(choleskyFac(matA.copy(), matResults.copy()))
