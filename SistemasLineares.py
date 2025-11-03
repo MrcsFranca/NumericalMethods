@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 def openFile(file):
-    matList = []
+    hQList = []
     try:
         with open(file, "r") as file:
             for line in file:
@@ -13,7 +13,7 @@ def openFile(file):
 
                 numsStr = blankLine.split()
                 numsFloat = [float(num) for num in numsStr]
-                matList.append(numsFloat)
+                hQList.append(numsFloat)
 
     except FileNotFoundError:
         print(f"O arquivo '{file}' não foi encontrado")
@@ -22,13 +22,13 @@ def openFile(file):
         print(f"O arquivo '{file}' contém caracteres inválidos")
         return None, None
 
-    if not matList:
+    if not hQList:
         print("Arquivo vazio ou não lido")
         return None, None
 
-    matrix = np.array(matList, dtype=float)
-    A = matrix[:, :-1]
-    results = matrix[:, -1]
+    headQuarters = np.array(hQList, dtype=float)
+    A = headQuarters[:, :-1]
+    results = headQuarters[:, -1]
     print("matriz A")
     print(A)
     print("resultados")
@@ -38,11 +38,11 @@ def openFile(file):
 
 def subDeterminant(A):
     n = len(A)
-    subMatrixList = []
+    subHeadQuartersList = []
     for subSize in (0, n):
-        subMatrix = A[0:subSize, 0:subSize]
-        subMatrixList.append(np.linalg.det(subMatrix))
-    return subMatrixList
+        subHeadQuarters = A[0:subSize, 0:subSize]
+        subHeadQuartersList.append(np.linalg.det(subHeadQuarters))
+    return subHeadQuartersList
 
 # Metodos diretos
 def gaussElimination(A, results):
@@ -186,8 +186,8 @@ def completePivoting(A, results):
     return xResult
 
 def LUDecomposition(A, results):
-    subMatrixList = subDeterminant(A)
-    for sub in subMatrixList:
+    subHeadQuartersList = subDeterminant(A)
+    for sub in subHeadQuartersList:
         if sub == 0:
             return "A matriz tem determinante igual a 0, logo não tem solução por este método"
 
@@ -235,8 +235,8 @@ def LUDecomposition(A, results):
         print(f'x[{result}] = {x[result]}')
 
 def choleskyFac(A, B):
-    subMatrixList = subDeterminant(A)
-    for sub in subMatrixList:
+    subHeadQuartersList = subDeterminant(A)
+    for sub in subHeadQuartersList:
         if sub <= 0:
             return "A matriz tem determinante menor ou igual a 0, logo não tem solução por este método"
 
@@ -248,31 +248,31 @@ def choleskyFac(A, B):
             if A[i, j] != A[j, i]:
                 return "A matriz não é simétrica, logo não pode ser resolvida por este método"
 
-    auxMatrix = np.zeros((numVariables, numVariables), dtype = float)
+    auxHeadQuarters = np.zeros((numVariables, numVariables), dtype = float)
     sumAux = 0
     for i in range(numVariables):
-        sumAux = sum(auxMatrix[i, j] ** 2 for j in range(i))
-        auxMatrix[i, i] = math.sqrt(A[i, i] - sumAux)
+        sumAux = sum(auxHeadQuarters[i, j] ** 2 for j in range(i))
+        auxHeadQuarters[i, i] = math.sqrt(A[i, i] - sumAux)
 
         for j in range(i + 1, numVariables):
-            sumAux = sum(auxMatrix[i, k] * auxMatrix[j, k] for k in range(i))
-            auxMatrix[j, i] = (A[j, i] - sumAux) / auxMatrix[i, i]
+            sumAux = sum(auxHeadQuarters[i, k] * auxHeadQuarters[j, k] for k in range(i))
+            auxHeadQuarters[j, i] = (A[j, i] - sumAux) / auxHeadQuarters[i, i]
 
-    transposeMatrix = auxMatrix.transpose()
+    transposeHeadQuarters = auxHeadQuarters.transpose()
     y = np.zeros(numVariables)
 
     for i in range(numVariables):
         sumAux = B[i]
         for j in range(i):
-            sumAux -= auxMatrix[i, j] * y[j]
-        y[i] = sumAux / auxMatrix[i, i]
+            sumAux -= auxHeadQuarters[i, j] * y[j]
+        y[i] = sumAux / auxHeadQuarters[i, i]
 
     for i in range(numVariables - 1, -1, -1):
         aux = y[i]
         for j in range(i + 1, numVariables):
-            aux -= transposeMatrix[i, j] * x[j]
+            aux -= transposeHeadQuarters[i, j] * x[j]
 
-        x[i] = aux / transposeMatrix[i, i]
+        x[i] = aux / transposeHeadQuarters[i, i]
 
     print("O resultado é:")
     for result in range(len(x)):
@@ -299,20 +299,20 @@ def testeDeParada():
 # Execução
 
 if __name__ == "__main__":
-    matA, matResults = openFile("sistema.txt")
-    if matA is not None and matResults is not None:
+    hQA, hQResults = openFile("sistema.txt")
+    if hQA is not None and hQResults is not None:
         print("matriz A")
-        print(matA)
+        print(hQA)
         print("resultados")
-        print(matResults)
+        print(hQResults)
 
         print("gaus:")
-        print(gaussElimination(matA.copy(), matResults.copy()))
+        print(gaussElimination(hQA.copy(), hQResults.copy()))
         print("parcial:")
-        print(partialPivoting(matA.copy(), matResults.copy()))
+        print(partialPivoting(hQA.copy(), hQResults.copy()))
         print("completo:")
-        print(completePivoting(matA.copy(), matResults.copy()))
+        print(completePivoting(hQA.copy(), hQResults.copy()))
         print("LU:")
-        print(LUDecomposition(matA.copy(), matResults.copy()))
+        print(LUDecomposition(hQA.copy(), hQResults.copy()))
         print("cholesky:")
-        print(choleskyFac(matA.copy(), matResults.copy()))
+        print(choleskyFac(hQA.copy(), hQResults.copy()))
