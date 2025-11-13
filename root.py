@@ -18,20 +18,32 @@ def padronizar(linha):
 
     return formula
 
-def openFile():
-    arquivo = open("formula.txt", "r")
+def openFile(file_path):
+    formulas = []
+    try:
+        with open(file_path, "r") as file:
+            for line in file:
+                blankLine = line.strip()
+                if not blankLine or blankLine.startswith('#'):
+                    continue
+                
+                if len(formulas) < 3:
+                    formulas.append(padronizar(blankLine))
 
-    linha = arquivo.readline()
-    formula = padronizar(linha)
+    except FileNotFoundError:
+        print(f"O arquivo '{file_path}' não foi encontrado")
+        return None, None, None
+    except Exception as e:
+        print(f"Erro ao ler o arquivo: {e}")
+        return None, None, None
 
-    linha = arquivo.readline()
-    formulaIter = padronizar(linha)
-
-    linha = arquivo.readline()
-    formulaDer   = padronizar(linha)
-
-    arquivo.close()
-    return formula, formulaIter, formulaDer
+    if len(formulas) < 3:
+        print(f"ERRO: O arquivo deve conter 3 fórmulas (Função, Iterada, Derivada).")
+        print(f"Encontradas: {len(formulas)}. Completando com strings vazias.")
+        while len(formulas) < 3:
+            formulas.append("")
+            
+    return formulas[0], formulas[1], formulas[2]
 
 def funcExec(x, formula):
     try:
@@ -185,30 +197,14 @@ def regulaFalsi(a, b, precisao, maxIt, formula):
     if k >= maxIt:
         print("A função, provavelmente, e divergente")
 
-if __name__ == "__main__":
-    a = float(input("Insira o limite menor: "))
-    b = float(input("Insira o limete maior: "))
-    precisao = float(input("Insira a precisao: "))
-    maxIt = int(input("Insira o número de interações máxima: "))
-
-    stdout = sys.stdout
-
-    formula, formulaIter, formulaDer = openFile()
-
-    with open("resultados.txt", 'w') as resultados:
-
-        sys.stdout = resultados
-
-        print("\n---[ Metodo da bisseccao ]------------------------------------------------")
-        bissec(a, b, precisao, maxIt, formula)
-        print("\n---[ Metodo iterativo linear ou metodo do ponto fixo ]--------------------")
-        mpf(a, precisao, maxIt, formula, formulaIter)
-        print("\n---[ Metodo de Newton ]---------------------------------------------------")
-        newton(a, precisao, maxIt, formula, formulaDer)
-        print("\n---[ Metodo da secante ]--------------------------------------------------")
-        secante(a, b, precisao, maxIt, formula)
-        print("\n---[ Metodo da regula-falsi ]--------------------------------------------------")
-        regulaFalsi(a, b, precisao, maxIt, formula)
-
-    sys.stdout = stdout
-    print("Resultados salvos no arquivo \"Resultados.txt\"")
+def allMethods(a, b, precisao, maxIt, formula, formulaIter, formulaDer):
+    print("\n---[ Metodo da bisseccao ]------------------------------------------------")
+    bissec(a, b, precisao, maxIt, formula)
+    print("\n---[ Metodo iterativo linear ou metodo do ponto fixo ]--------------------")
+    mpf(a, precisao, maxIt, formula, formulaIter)
+    print("\n---[ Metodo de Newton ]---------------------------------------------------")
+    newton(a, precisao, maxIt, formula, formulaDer)
+    print("\n---[ Metodo da secante ]--------------------------------------------------")
+    secante(a, b, precisao, maxIt, formula)
+    print("\n---[ Metodo da regula-falsi ]--------------------------------------------------")
+    regulaFalsi(a, b, precisao, maxIt, formula)

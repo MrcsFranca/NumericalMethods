@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
-import linearEquations as le  # Importa o arquivo com suas funções
+import linearEquations as le
+import root as rt
 import io
 from contextlib import redirect_stdout
 import numpy as np
@@ -9,7 +10,6 @@ class headquarterEntryWindow:
     def __init__(self, parentApp):
         self.parentApp = parentApp 
         
-        # Toplevel é o mesmo
         self.window = tk.Toplevel(parentApp.root)
         self.window.title("Adicionar matriz manualmente")
         self.window.geometry("450x350")
@@ -19,18 +19,14 @@ class headquarterEntryWindow:
         self.hqA = []
         self.hqB = []
 
-        # MUDANÇA: Usando tk.Frame em vez de ttk.Frame
         self.frameGrid = tk.Frame(self.window, padx=10, pady=10)
         self.frameGrid.pack(expand=True, fill='both')
 
-        # MUDANÇA: Usando tk.Frame em vez de ttk.Frame
         self.frameControls = tk.Frame(self.window, padx=10, pady=5)
         self.frameControls.pack(side='bottom', fill='x')
 
         self.createGrid()
 
-        # --- Botões de Controle ---
-        # MUDANÇA: Usando tk.Button em vez de ttk.Button
         self.decreaseBtn = tk.Button(self.frameControls, text="-", command=self.decreaseHeadquarterSize, width=5)
         self.decreaseBtn.pack(side='left', padx=5)
 
@@ -51,17 +47,14 @@ class headquarterEntryWindow:
             hqRow = []
             
             for j in range(self.headquarterSize):
-                # MUDANÇA: Usando tk.Entry em vez de ttk.Entry
                 entry = tk.Entry(self.frameGrid, width=5)
                 entry.grid(row=i, column=j, padx=2, pady=2, sticky='ew')
                 hqRow.append(entry)
             
             self.hqA.append(hqRow)
 
-            # MUDANÇA: Usando tk.Label em vez de ttk.Label
             tk.Label(self.frameGrid, text=" = ").grid(row=i, column=self.headquarterSize, padx=5)
             
-            # MUDANÇA: Usando tk.Entry em vez de ttk.Entry
             hqResults = tk.Entry(self.frameGrid, width=5)
             hqResults.grid(row=i, column=self.headquarterSize + 1, padx=2, pady=2, sticky='ew')
             self.hqB.append(hqResults)
@@ -113,12 +106,11 @@ class vectorEntryWindow:
         
         self.window = tk.Toplevel(parentApp.root)
         self.window.title("Definir vector Inicial (x0)")
-        self.window.geometry("250x400") # Janela mais fina
+        self.window.geometry("250x400")
         self.window.transient(parentApp.root)
 
         self.entries = []
         
-        # Frame principal com rolagem (caso a matriz seja muito grande)
         mainFrame = tk.Frame(self.window)
         canvas = tk.Canvas(mainFrame)
         scrollbar = tk.Scrollbar(mainFrame, orient="vertical", command=canvas.yview)
@@ -135,10 +127,8 @@ class vectorEntryWindow:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Cria a grade de entradas
         self.createGrid(scrollLableFrame)
 
-        # Frame para o botão de salvar
         controlsFrame = tk.Frame(self.window, padx=10, pady=5)
         controlsFrame.pack(side='bottom', fill='x')
 
@@ -147,13 +137,11 @@ class vectorEntryWindow:
 
     def createGrid(self, container):
         for i in range(self.x0Size):
-            # Adiciona um label (x0, x1, x2...)
             tk.Label(container, text=f"x[{i}]:").grid(row=i, column=0, padx=5, pady=5)
             
-            # Adiciona o campo de entrada
             entry = tk.Entry(container, width=15)
             entry.grid(row=i, column=1, padx=5, pady=5, sticky='ew')
-            entry.insert(0, "0.0") # Insere 0.0 como padrão
+            entry.insert(0, "0.0")
             self.entries.append(entry)
             
         container.columnconfigure(1, weight=1)
@@ -161,14 +149,12 @@ class vectorEntryWindow:
     def setX0Vector(self):
         vectorList = []
         try:
-            # Lê os valores de todos os campos de entrada
             for i in range(self.x0Size):
                 val = float(self.entries[i].get())
                 vectorList.append(val)
                 
             x0Vector = np.array(vectorList, dtype=float)
             
-            # Envia o vetor de volta para a aplicação principal
             self.parentApp.setInitVector(x0Vector)
             self.window.destroy()
 
@@ -181,12 +167,14 @@ class InterfaceApp:
         self.root.title("Calculadora de métodos muméricos")
         self.root.geometry("800x600")
 
-        # --- MUDANÇA: Variáveis para guardar a matriz ---
-        self.filePath = None # Guarda o caminho do arquivo
-        self.insertAHeadquarter = None # Guarda a Matriz A manual
-        self.insertBHeadquarter = None # Guarda o vector B manual
+        self.filePath = None
+        self.insertAHeadquarter = None
+        self.insertBHeadquarter = None
         self.x0Vector = None
         self.x0VectorSize = 0
+
+        
+        self.rootFilePath = None
 
         style = ttk.Style(self.root)
         style.theme_use('clam') 
@@ -203,8 +191,65 @@ class InterfaceApp:
         self.createRootFrame()
 
     def createRootFrame(self):
-        label = ttk.Label(self.rootFrame, text="Conteúdo da aba 'Raízes' aqui.", font=("Arial", 14))
-        label.pack(expand=True, anchor="center")
+        for widget in self.rootFrame.winfo_children():
+            widget.destroy()
+
+        mainFrame = ttk.Frame(self.rootFrame)
+        mainFrame.pack(fill='x', expand=True, side='top')
+
+        leftFrame = ttk.Frame(mainFrame)
+        leftFrame.pack(side='left', fill='x', expand=True, padx=10)
+
+        rightFrame = ttk.Frame(mainFrame)
+        rightFrame.pack(side='right', fill='y', padx=10)
+
+        ttk.Label(leftFrame, text="Solução de raízes de funções:", font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, sticky='w', pady=10)
+
+        ttk.Label(leftFrame, text="Escolher arquivo de funções:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
+        fileFrame = ttk.Frame(leftFrame)
+        fileFrame.grid(row=1, column=1, sticky='we')
+        
+        self.rootFileBtn = ttk.Button(fileFrame, text="Carregar arquivo...", command=self.openRootFileWindow)
+        self.rootFileBtn.pack(side='left')
+        
+        self.infoRootBtn = ttk.Button(fileFrame, text="i", command=self.showRootInfo, width=2)
+        self.infoRootBtn.pack(side='left', padx=5)
+
+        self.selectedRootFileLabel = ttk.Label(leftFrame, text="Nenhum arquivo carregado", font=("Arial", 9, "italic"))
+        self.selectedRootFileLabel.grid(row=2, column=0, columnspan=2, sticky='w', padx=5)
+
+        ttk.Separator(leftFrame, orient='horizontal').grid(row=3, column=0, columnspan=2, sticky='we', pady=15)
+        ttk.Label(leftFrame, text="Parâmetros:", font=("Arial", 12, "bold")).grid(row=4, column=0, columnspan=2, sticky='w', pady=5)
+
+        ttk.Label(leftFrame, text="Intervalo [a] (ou x0):").grid(row=5, column=0, sticky='w', padx=5, pady=5)
+        self.setRootA = ttk.Entry(leftFrame, state="normal")
+        self.setRootA.grid(row=5, column=1, sticky='we')
+        self.setRootA.insert(0, "1.0")
+
+        ttk.Label(leftFrame, text="Intervalo [b] (ou x1):").grid(row=6, column=0, sticky='w', padx=5, pady=5)
+        self.setRootB = ttk.Entry(leftFrame, state="normal")
+        self.setRootB.grid(row=6, column=1, sticky='we')
+        self.setRootB.insert(0, "2.0")
+        
+        ttk.Label(leftFrame, text="Precisão (tolerância):").grid(row=7, column=0, sticky='w', padx=5, pady=5)
+        self.setRootPrecision = ttk.Entry(leftFrame, state="normal")
+        self.setRootPrecision.grid(row=7, column=1, sticky='we')
+        self.setRootPrecision.insert(0, "1e-5")
+
+        ttk.Label(leftFrame, text="Nº Máximo de iterações:").grid(row=8, column=0, sticky='w', padx=5, pady=5)
+        self.setRootMaxIt = ttk.Entry(leftFrame, state="normal")
+        self.setRootMaxIt.grid(row=8, column=1, sticky='we')
+        self.setRootMaxIt.insert(0, "50")
+        
+        leftFrame.columnconfigure(1, weight=1)
+
+        self.calculateRootBtn = ttk.Button(rightFrame, text="Calcular raízes", command=self.calculateRoots)
+        self.calculateRootBtn.pack(fill='x', expand=True, ipady=10, side='bottom', pady=20)
+
+        ttk.Label(self.rootFrame, text="Resultados:", font=("Arial", 12, "bold")).pack(anchor='w', padx=10, pady=(20, 5))
+        self.rootResultText = scrolledtext.ScrolledText(self.rootFrame, height=10, font=("Courier New", 10))
+        self.rootResultText.pack(fill='both', expand=True, padx=10, pady=5)
+        self.rootResultText.config(state="disabled")
 
     def createSystemFrame(self):
         mainFrame = ttk.Frame(self.systemFrame)
@@ -218,7 +263,6 @@ class InterfaceApp:
 
         ttk.Label(leftFrame, text="Solução de sistemas lineares:", font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, sticky='w', pady=10)
 
-        # --- MUDANÇA: Frame de Arquivo modificado ---
         ttk.Label(leftFrame, text="Escolher matriz:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
         
         fileFrame = ttk.Frame(leftFrame)
@@ -227,7 +271,6 @@ class InterfaceApp:
         self.fileBtn = ttk.Button(fileFrame, text="Carregar Arquivo...", command=self.openFileWindow)
         self.fileBtn.pack(side='left')
 
-        # --- NOVO BOTÃO ---
         self.setHeadquarterBtn = ttk.Button(fileFrame, text="Adicionar matriz", command=self.setHeadquarterWindow)
         self.setHeadquarterBtn.pack(side='left', padx=10)
         
@@ -237,7 +280,6 @@ class InterfaceApp:
         self.selectedFileLabel = ttk.Label(leftFrame, text="Nenhuma matriz carregada", font=("Arial", 9, "italic"))
         self.selectedFileLabel.grid(row=2, column=0, columnspan=2, sticky='w', padx=5)
 
-        # (O resto da aba continua igual)
         ttk.Separator(leftFrame, orient='horizontal').grid(row=3, column=0, columnspan=2, sticky='we', pady=15)
         ttk.Label(leftFrame, text="Configurações de métodos iterativos:", font=("Arial", 12, "bold")).grid(row=4, column=0, columnspan=2, sticky='w', pady=5)
 
@@ -258,14 +300,13 @@ class InterfaceApp:
         
         self.setVectorBtn = ttk.Button(vectorFrame, text="Definir vetor inicial", command=self.x0Window)
         self.setVectorBtn.pack(side='left')
-        self.setVectorBtn.config(state="disabled") # Começa desabilitado
+        self.setVectorBtn.config(state="disabled")
         
         self.infoVectorBtn = ttk.Button(vectorFrame, text="i", command=self.infoX0, width=2)
         self.infoVectorBtn.pack(side='left', padx=5)
 
         leftFrame.columnconfigure(1, weight=1)
 
-        # --- Frame Direita (Controles) ---
         ttk.Label(rightFrame, text="Método de solução:").pack(anchor='w')
         directMethods = ["Gauss (Simples)", "Gauss (Piv. Parcial)", "Gauss (Piv. Completo)", "Decomposição LU", "Fatoração de Cholesky", "Gauss-Jacobi", "Gauss-Seidel"]
         self.methodsComboBox = ttk.Combobox(rightFrame, values=directMethods, state="readonly")
@@ -274,13 +315,11 @@ class InterfaceApp:
         self.calculateBtn = ttk.Button(rightFrame, text="Calcular matriz", command=self.calculate)
         self.calculateBtn.pack(fill='x', expand=True, ipady=10, side='bottom', pady=20)
 
-        # --- Área de Resultado ---
         ttk.Label(self.systemFrame, text="Resultados:", font=("Arial", 12, "bold")).pack(anchor='w', padx=10, pady=(20, 5))
         self.resultText = scrolledtext.ScrolledText(self.systemFrame, height=10, font=("Courier New", 10))
         self.resultText.pack(fill='both', expand=True, padx=10, pady=5)
         self.resultText.config(state="disabled")
 
-#####################################################################################################
     def openFileWindow(self):
         self.filePath = filedialog.askopenfilename(
             title="Selecionar arquivo",
@@ -288,25 +327,22 @@ class InterfaceApp:
         )
         if self.filePath:
             try:
-                # Carrega em modo "silencioso"
                 fileToOpen = io.StringIO()
                 with redirect_stdout(fileToOpen):
                     hqATemp, hqBTemp = le.openFile(self.filePath)
                 
-                if hqATemp is None: # Se openFile falhou
+                if hqATemp is None:
                     self.selectedFileLabel.config(text="Erro ao ler o arquivo. Verifique o formato.")
                     self.filePath = None
                     return
 
-                # Se deu certo, atualiza a interface
                 splitName = self.filePath.split('/')[-1]
                 self.selectedFileLabel.config(text=f"Arquivo: {splitName}")
                 
-                # --- ACRESCENTADO ---
-                self.x0SizeHq = hqATemp.shape[0] # Salva o x0Size
-                self.setVectorBtn.config(state="normal") # Habilita o botão do vetor
-                self.initialVector = None # Reseta o vetor
-                self.insertAHeadquarter = None # Reseta a matriz manual
+                self.x0SizeHq = hqATemp.shape[0]
+                self.setVectorBtn.config(state="normal")
+                self.initialVector = None
+                self.insertAHeadquarter = None
                 self.insertBHeadquarter = None
 
             except Exception as e:
@@ -325,25 +361,19 @@ class InterfaceApp:
             "Use '#' no início de uma linha para comentários."
         )
 
-##################################################################################################################################################################
-    # --- NOVA FUNÇÃO ---
     def setHeadquarterWindow(self):
-        # Cria a janela pop-up passando a si mesmo (self) como pai
         self.headquarterPopup = headquarterEntryWindow(self)
 
-    # --- NOVA FUNÇÃO ---
     def setManualHq(self, A, b):
         self.insertAHeadquarter = A
         self.insertBHeadquarter = b
         
-        # Limpa o caminho do arquivo para não haver conflito
         self.filePath = None
 
-        self.x0SizeHq = A.shape[0] # Salva o x0Size
-        self.setVectorBtn.config(state="normal") # Habilita o botão
-        self.initialVector = None # Reseta o vetor
+        self.x0SizeHq = A.shape[0]
+        self.setVectorBtn.config(state="normal")
+        self.initialVector = None
         
-        # Atualiza o label para mostrar que a matriz foi carregada
         self.selectedFileLabel.config(text=f"Matriz manual {A.shape[0]}x{A.shape[1]} carregada.")
         print("Matriz manual recebida pela interface principal.")
         print("Matriz A:")
@@ -352,7 +382,6 @@ class InterfaceApp:
         print(self.insertBHeadquarter)
 
     def x0Window(self):
-        # 'self.x0SizeHq' foi definido ao carregar a matriz
         if self.x0SizeHq > 0:
             self.x0Popup = vectorEntryWindow(self, self.x0SizeHq)
         else:
@@ -378,20 +407,16 @@ class InterfaceApp:
 
         chosenMethod = self.methodsComboBox.get()
         
-        # --- LÓGICA DE CÁLCULO ATUALIZADA ---
         ACalc, BCalc = None, None
         
-        # 1. Verifica se existe uma matriz manual
         if self.insertAHeadquarter is not None and self.insertBHeadquarter is not None:
             ACalc = self.insertAHeadquarter.copy()
             BCalc = self.insertBHeadquarter.copy()
             self.resultText.insert("end", "Iniciando cálculo...\n")
         
-        # 2. Se não, verifica se existe um caminho de arquivo
         elif self.filePath:
             self.resultText.insert("end", f"Carregando dados do arquivo: {self.filePath.split('/')[-1]}...\n")
             try:
-                # Captura os prints da função openFile
                 fileToOpen = io.StringIO()
                 with redirect_stdout(fileToOpen):
                     ACalc, BCalc = le.openFile(self.filePath)
@@ -406,19 +431,16 @@ class InterfaceApp:
                 self.resultText.insert("end", f"ERRO ao processar o arquivo: {e}")
                 return
         
-        # 3. Se não houver nenhum dos dois
         else:
             self.resultText.insert("end", "ERRO: Nenhum arquivo ou matriz manual foi carregado.")
             self.resultText.config(state="disabled")
             return
             
-        # 4. Captura o output (os prints) das suas funções de cálculo
         f = io.StringIO()
         finalResult = None
         
         try:
             with redirect_stdout(f):
-                # colocar .copy nos parametros
                 if chosenMethod == "Gauss (Simples)":
                     finalResult = le.gaussElimination(ACalc.copy(), BCalc.copy())
                 elif chosenMethod == "Gauss (Piv. Parcial)":
@@ -458,21 +480,91 @@ class InterfaceApp:
             
             output = f.getvalue()
             
-            # 6. Exibe o resultado
             if output:
                 self.resultText.insert("end", "\n--- Saída do Console da Função ---\n")
                 self.resultText.insert("end", output)
             
-            if isinstance(finalResult, str): # Se a função retornou uma string (erro)
+            if isinstance(finalResult, str):
                 self.resultText.insert("end", f"\nERRO: {finalResult}")
             else:
                  self.resultText.insert("end", "\n--- Cálculo Concluído ---")
                  
         except Exception as e:
-            # Captura erros que podem acontecer durante o cálculo (ex: divisão por 0)
             self.resultText.insert("end", f"\n--- ERRO DURANTE O CÁLCULO ---\n{type(e).__name__}: {e}")
 
         self.resultText.config(state="disabled")
+
+    def openRootFileWindow(self):
+        self.rootFilePath = filedialog.askopenfilename(
+            title="Selecionar arquivo de funções",
+            filetypes=(("Arquivos de Texto", "*.txt"), ("Todos os arquivos", "*.*"))
+        )
+        if self.rootFilePath:
+            splitName = self.rootFilePath.split('/')[-1]
+            self.selectedRootFileLabel.config(text=f"Arquivo: {splitName}")
+        else:
+            self.selectedRootFileLabel.config(text="Nenhum arquivo carregado.")
+
+    def showRootInfo(self):
+        messagebox.showinfo(
+            "Formato do arquivo de funções",
+            "O arquivo de texto deve conter pelo menos 3 linhas, sendo respectivamente:\n\n"
+            "f(x), g(x) e f'(x)\n"
+            "Cada função em uma linha\n"
+            "Insira apenas a função (sem 'f(x) =' por exemplo)\n\n"
+            "Use '#' para comentários. Linhas em branco são ignoradas."
+        )
+
+    def calculateRoots(self):
+        self.rootResultText.config(state="normal")
+        self.rootResultText.delete(1.0, "end")
+
+        if not self.rootFilePath:
+            self.rootResultText.insert("end", "ERRO: Nenhum arquivo de funções foi carregado.")
+            self.rootResultText.config(state="disabled")
+            return
+        
+        try:
+            a = float(self.setRootA.get())
+            b = float(self.setRootB.get())
+            precisao = float(self.setRootPrecision.get())
+            maxIt = int(self.setRootMaxIt.get())
+        except ValueError:
+            self.rootResultText.insert("end", "ERRO: Verifique se 'a', 'b', 'precisao' e 'maxIt' são números válidos.")
+            self.rootResultText.config(state="disabled")
+            return
+        
+        rootStdout = io.StringIO()
+        try:
+            with redirect_stdout(rootStdout):
+                formula, formulaIter, formulaDer = rt.openFile(self.rootFilePath)
+            
+            if formula is None:
+                self.rootResultText.insert("end", rootStdout.getvalue())
+                self.rootResultText.config(state="disabled")
+                return
+            
+            self.rootResultText.insert("end", f"Arquivo '{self.rootFilePath.split('/')[-1]}' carregado.\n")
+            self.rootResultText.insert("end", f"Calculando com a={a}, b={b}, precisao={precisao}, maxIt={maxIt}\n")
+            
+            with redirect_stdout(rootStdout):
+                rt.allMethods(a, b, precisao, maxIt, formula, formulaIter, formulaDer)
+            
+            output = rootStdout.getvalue()
+            
+            try:
+                with open("resultados.txt", 'w', encoding='utf-8') as f_out:
+                    f_out.write(output)
+                self.rootResultText.insert("end", "\n--- Resultados Salvos em 'resultados.txt' ---\n")
+            except Exception as e:
+                self.rootResultText.insert("end", f"\n--- ERRO AO SALVAR ARQUIVO: {e} ---\n")
+
+            self.rootResultText.insert("end", output)
+            
+        except Exception as e:
+            self.rootResultText.insert("end", f"\n--- ERRO DURANTE O CÁLCULO ---\n{type(e).__name__}: {e}")
+
+        self.rootResultText.config(state="disabled")
 
 if __name__ == "__main__":
     root = tk.Tk()

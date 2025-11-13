@@ -45,7 +45,6 @@ def subDeterminant(A):
         subHeadQuartersList.append(np.linalg.det(subHeadQuarters))
     return subHeadQuartersList
 
-# Metodos diretos
 def gaussElimination(A, results):
     begin = time.time()
     print("Eliminação de gauss")
@@ -202,7 +201,7 @@ def LUDecomposition(A, results):
     numVariables = len(results)
     x = np.zeros(numVariables)
     y = np.zeros(numVariables)
-    U = A
+    U = A.copy()
     L = np.zeros([numVariables, numVariables])
     for i in range(0, numVariables):
         if A[i, i] == 0:
@@ -290,7 +289,6 @@ def choleskyFac(A, B):
     for result in range(len(x)):
         print(f'x[{result}] = {x[result]}')
 
-# Metodos iterativos
 def gaussJacobi(A, results, tolerance, maxIt, xk = None):
     begin = time.time()
 
@@ -422,16 +420,3 @@ def maxVector(vector):
             maxValue = math.fabs(vector[i])
     
     return maxValue
-
-"""
-if "__main__" == __name__:
-    hQA, hQResults = openFile("sistema.txt")
-    if hQA is not None and hQResults is not None:
-        print("matriz A")
-        print(hQA)
-        print("resultados")
-        print(hQResults)
-    
-    x0 = np.zeros(len(hQA))
-    gaussJacobi(hQA.copy(), hQResults.copy(), 0.01, 100, x0.copy())
-"""
