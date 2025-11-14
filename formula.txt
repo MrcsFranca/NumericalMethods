@@ -1,15 +1,19 @@
-#e^(-x^2) - cos(x)
-#cos(x) - e^(-x^2) + x
-#sen(x) - 2xe^(-x^2)
+#Resultado: Aproximadamente 1.4474105834960938
+e^(-x^2) - cos(x)
+cos(x) - e^(-x^2) + x
+sen(x) - 2xe^(-x^2)
 
-cos(x) - x
-cos(x)
--sen(x) - 1
+#Resultado: Aproximadamente 0.73908513
+#cos(x) - x
+#cos(x)
+#-sen(x) - 1
 
-#e^x - 5x
-#(e^x) / 5
-#e^x - 5
+#Resultado: Aproximadamente 0.2592480678490688
+#xe^x - 5x
+#x(e^x) / 5
+#xe^x - 5
 
+#Resultado: Aproximadamente 1.52137971
 #x^3-x-2
 #(x+2)^(1/3)
 #3x^2 - 1
