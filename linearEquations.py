@@ -308,7 +308,8 @@ def gaussJacobi(A, results, tolerance, maxIt, xk = None):
             x /= A[i, i]
             newXk[i] = x
 
-        if stopCondition(xk.copy(), newXk.copy(), numVariables) < tolerance:
+        stopValueRelative, stopValueAbsolute = stopCondition(xk.copy(), newXk.copy(), numVariables)
+        if stopValueRelative < tolerance or stopValueAbsolute < tolerance:
             end = time.time()
             print(f"---O programa levou {end - begin} segundos para gerar o resultado com {it + 1} iterações:")
             for result in range(len(newXk)):
@@ -361,7 +362,8 @@ def gaussSeidel(A, results, tolerance, maxIt, xk = None):
 
             xk[i] = x / A[i, i]
 
-        if stopCondition(oldXk.copy(), xk.copy(), numVariables) < tolerance:
+        stopValueRelative, stopValueAbsolute = stopCondition(oldXk.copy(), xk.copy(), numVariables)
+        if stopValueRelative < tolerance or stopValueAbsolute < tolerance:
             end = time.time()
             print(f"---O programa levou {end - begin} segundos para gerar o resultado com {it + 1} iterações:")
             for result in range(len(xk)):
@@ -408,10 +410,11 @@ def sassenfeld(A):
 
 def stopCondition(xk, newXk, numVariables):
     tempHq = newXk - xk
-    if maxVector(newXk) == 0:
+    if maxVector(tempHq) == 0:
         return 0.0
-    stopValue = maxVector(tempHq) / maxVector(newXk)
-    return stopValue
+    stopValueRelative = maxVector(tempHq) / maxVector(newXk)
+    stopValueAbsolute = maxVector(tempHq)
+    return stopValueRelative, stopValueAbsolute
 
 def maxVector(vector):
     maxValue = 0

@@ -18,10 +18,10 @@ def padronizar(linha):
 
     return formula
 
-def openFile(file_path):
+def openFile(filePath):
     formulas = []
     try:
-        with open(file_path, "r") as file:
+        with open(filePath, "r") as file:
             for line in file:
                 blankLine = line.strip()
                 if not blankLine or blankLine.startswith('#'):
@@ -31,7 +31,7 @@ def openFile(file_path):
                     formulas.append(padronizar(blankLine))
 
     except FileNotFoundError:
-        print(f"O arquivo '{file_path}' não foi encontrado")
+        print(f"O arquivo '{filePath}' não foi encontrado")
         return None, None, None
     except Exception as e:
         print(f"Erro ao ler o arquivo: {e}")
