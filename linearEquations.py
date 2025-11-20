@@ -50,26 +50,36 @@ def gaussElimination(A, results):
     print("Eliminação de gauss")
     if np.linalg.det(A) == 0:
         return "A matriz tem determinante igual a 0, logo não tem solução por este método"
-
     numVariables = len(results)
-    x = []
     x = np.zeros(numVariables)
-    
-    for i in range(numVariables - 1): 
+
+    for i in range(numVariables - 1):
+        if math.fabs(A[i, i]) < 1.0e-12:
+            swap = False
+            for j in range(i + 1, numVariables):
+                if math.fabs(A[j, i]) > 1.0e-12:
+                    A[[i, j]] = A[[j, i]]
+                    results[[i, j]] = results[[j, i]]
+                    swap = True
+                    break
+            if not swap:
+                return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
+
         for j in range(i + 1, numVariables):
-            if A[i, i] == 0:
-                return "Foi encontrada um divisão por 0"
             if A[j, i] == 0:
                 continue
 
             multiplier = A[j, i] / A[i, i]
 
-            for k in range(i, numVariables):
-                A[j, k] = A[j, k] - A[i, k] * multiplier
+            A[j, i:] = A[j, i:] - A[i, i:] * multiplier
             results[j] = results[j] - results[i] * multiplier
 
+    if math.fabs(A[numVariables - 1, numVariables - 1]) < 1.0e-12:
+        return "Pivo final é nulo"
+
     x[numVariables - 1] = results[numVariables - 1] / A[numVariables - 1, numVariables - 1]
-    for i in range(numVariables - 1, -1, -1):
+    for i in range(numVariables - 2, -1, -1):
         aux = 0
         for j in range(i + 1, numVariables):
             aux += A[i, j] * x[j]
@@ -201,42 +211,57 @@ def LUDecomposition(A, results):
     numVariables = len(results)
     x = np.zeros(numVariables)
     y = np.zeros(numVariables)
+    results = results.copy()
     U = A.copy()
-    L = np.zeros([numVariables, numVariables])
-    for i in range(0, numVariables):
-        if A[i, i] == 0:
-            return "Foi encontrada um divisão por 0"
-        for j in range(0, numVariables):
-            if i == j:
-                L[i, j] = 1
-            if i < j:
-                multiplier = A[j, i] / A[i, i]
-                L[j, i] = multiplier
-                for k in range(0, numVariables):
-                    U[j, k] = A[j, k] - A[i, k] * multiplier
+    L = np.eye(numVariables)
 
-    A = np.zeros([numVariables, numVariables])
-    for i in range(0, numVariables):
-        for j in range(0, numVariables):
-            for k in range(0, numVariables):
-                A[i, j] += L[i, k] * U[k, j]
-
-    y = np.zeros(numVariables)
+    """
     for i in range(numVariables):
-        aux = 0
-        for j in range(i):
-            aux += L[i, j] * y[j]
-        
-        y[i] = results[i] - aux
+        if math.fabs(U[i, i]) < 1.0e-12:
+            swap = False
 
-    x = np.zeros(numVariables)
-    for i in range(numVariables - 1, -1, -1): 
-        aux = 0
+            for j in range(i + 1, numVariables):
+                if math.fabs(U[j, i]) > 1.0e-12:
+                    U[[i, j]] = U[[j, i]]
+                    results[[i, j]] = results[[j, i]]
+                    swap = True
+                    break
+            if not swap:
+                return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+    """
+
+    for i in range(numVariables - 1):
+        pivotLine = i
+        maxValue = math.fabs(U[i, i])
         for j in range(i + 1, numVariables):
-            aux += U[i, j] * x[j]
+            if math.fabs(U[j, i]) > maxValue:
+                maxValue = math.fabs(U[j, i])
+                pivotLine = j
         
-        x[i] = (y[i] - aux) / U[i, i]
+        if maxValue < 1.0e-12:
+            return "A matriz tem determinante igual a 0, logo não tem solução por este método"
 
+        if pivotLine != i:
+            U[[i, pivotLine]] = U[[pivotLine, i]]
+            
+            results[[i, pivotLine]] = results[[pivotLine, i]]
+            
+            if i > 0:
+                L[[i, pivotLine], :i] = L[[pivotLine, i], :i]
+
+
+        for j in range(i + 1, numVariables):
+            multiplier = U[j, i] / U[i, i]
+            L[j, i] = multiplier
+            U[j, i:] = U[j, i:] - U[i, i:] * multiplier
+            U[j, i] = 0
+
+    for i in range(numVariables):
+        y[i] = results[i] - np.dot(L[i, :i], y[:i])
+
+    for i in range(numVariables - 1, -1, -1):
+        x[i] = (y[i] - np.dot(U[i, i + 1:], x[i + 1:])) / U[i, i]
+    
     end = time.time()
     print(f"---O programa levou {end - begin} segundos para gerar o resultado:")
     for result in range(len(x)):
@@ -291,8 +316,30 @@ def choleskyFac(A, B):
 
 def gaussJacobi(A, results, tolerance, maxIt, xk = None):
     begin = time.time()
+    print("Método de Gauss-Jacobi")
 
     numVariables = len(A)
+
+
+    subHeadQuartersList = subDeterminant(A)
+    for sub in subHeadQuartersList:
+        if sub == 0:
+            return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
+    for i in range(numVariables):
+        if math.fabs(A[i, i]) < 1.0e-12:
+            swap = False
+            for j in range(i + 1, numVariables):
+                if math.fabs(A[j, i]) > 1.0e-12:
+                    A[[i, j]] = A[[j, i]]
+                    results[[i, j]] = results[[j, i]]
+                    swap = True
+                    break
+            if not swap:
+                return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
+    gaussJacobiConvergence(A.copy())
+
     if xk is None:
         xk = np.zeros(numVariables, dtype=float)
 
@@ -323,7 +370,7 @@ def gaussJacobi(A, results, tolerance, maxIt, xk = None):
     print(f"---O programa levou {end - begin} segundos para gerar o resultado com {it + 1} iterações, porém não convergiu:")
     for result in range(len(newXk)):
         print(f'x[{result}] = {newXk[result]}')
-    return
+    return "O método não convergiu após o número máximo de iterações."
         
 def gaussJacobiConvergence(A):
     numVariables = len(A)
@@ -345,7 +392,29 @@ def gaussJacobiConvergence(A):
 
 def gaussSeidel(A, results, tolerance, maxIt, xk = None):
     begin = time.time()
+    print("Método de Gauss-Seidel")
+
+    subHeadQuartersList = subDeterminant(A)
+    for sub in subHeadQuartersList:
+        if sub == 0:
+            return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
     numVariables = len(A)
+
+    for i in range(numVariables):
+        if math.fabs(A[i, i]) < 1.0e-12:
+            swap = False
+            for j in range(i + 1, numVariables):
+                if math.fabs(A[j, i]) > 1.0e-12:
+                    A[[i, j]] = A[[j, i]]
+                    results[[i, j]] = results[[j, i]]
+                    swap = True
+                    break
+            if not swap:
+                return "A matriz tem determinante igual a 0, logo não tem solução por este método"
+
+    sassenfeld(A.copy())
+
     if xk is None:
         xk = np.zeros(numVariables, dtype = float)
     
@@ -376,7 +445,7 @@ def gaussSeidel(A, results, tolerance, maxIt, xk = None):
     print(f"---O programa levou {end - begin} segundos para gerar o resultado com {it + 1} iterações, porém não convergiu:")
     for result in range(len(xk)):
         print(f'x[{result}] = {xk[result]}')
-    return
+    return "O método não convergiu após o número máximo de iterações."
 
 def sassenfeld(A):
     numVariables = len(A)
@@ -385,7 +454,7 @@ def sassenfeld(A):
     for i in range(numVariables):
         pivot = math.fabs(A[i, i])
         if pivot == 0:
-            print("O pivot é 0, a convergência falhará")
+            print("O pivo é 0, a convergência falhará")
             return
 
         betaSum = 0
@@ -404,14 +473,14 @@ def sassenfeld(A):
     if maxVal < 1:
         print(f"Beta máximo: {maxVal} -> a convergência é garantida\n")
     else:
-        print(f"Beta máximo: {maxVal} -> a convergência não é garantida\n")
+        print(f"Beta máximo: {maxVal} -> a convergência não é garantida (não tem a diagonal dominante)\n")
     
     return
 
 def stopCondition(xk, newXk, numVariables):
     tempHq = newXk - xk
     if maxVector(tempHq) == 0:
-        return 0.0
+        return 0.0, 0.0
     stopValueRelative = maxVector(tempHq) / maxVector(newXk)
     stopValueAbsolute = maxVector(tempHq)
     return stopValueRelative, stopValueAbsolute

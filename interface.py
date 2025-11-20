@@ -161,6 +161,51 @@ class vectorEntryWindow:
         except ValueError:
             messagebox.showerror("Erro de Formato", "Todos os campos devem ser preenchidos com números válidos.", parent=self.window)
 
+class FunctionEntryWindow:
+    def __init__(self, parentApp):
+        self.parentApp = parentApp
+        
+        self.window = tk.Toplevel(parentApp.root)
+        self.window.title("Definir funções manualmente")
+        self.window.geometry("450x350")
+        self.window.transient(parentApp.root)
+
+        mainFrame = tk.Frame(self.window, padx=20, pady=20)
+        mainFrame.pack(expand=True, fill='both')
+
+        tk.Label(mainFrame, text="Função f(x):", font=("Arial", 12, "bold")).pack(anchor='w')
+        tk.Label(mainFrame, text="(Ex: e^x - 5x)", font=("Arial", 10, "italic")).pack(anchor='w')
+        self.entryFunction = tk.Entry(mainFrame, width=40)
+        self.entryFunction.pack(fill='x', pady=(0, 10))
+
+        tk.Label(mainFrame, text="Função Iterada g(x):", font=("Arial", 12, "bold")).pack(anchor='w')
+        tk.Label(mainFrame, text="(Para Método Ponto Fixo. Ex: (e^x)/5)", font=("Arial", 10, "italic")).pack(anchor='w')
+        self.entryItFunction = tk.Entry(mainFrame, width=40)
+        self.entryItFunction.pack(fill='x', pady=(0, 10))
+
+        tk.Label(mainFrame, text="Derivada f'(x):", font=("Arial", 12, "bold")).pack(anchor='w')
+        tk.Label(mainFrame, text="(Para Método Newton. Ex: e^x - 5)", font=("Arial", 10, "italic")).pack(anchor='w')
+        self.entryDxFunction = tk.Entry(mainFrame, width=40)
+        self.entryDxFunction.pack(fill='x', pady=(0, 10))
+
+        btnFrame = tk.Frame(self.window, pady=10)
+        btnFrame.pack(side='bottom', fill='x')
+        
+        saveBtn = tk.Button(btnFrame, text="Salvar Funções", command=self.saveFunctions, height=2)
+        saveBtn.pack(side='right', padx=20, pady=10)
+
+    def saveFunctions(self):
+        fx = self.entryFunction.get().strip()
+        gx = self.entryItFunction.get().strip()
+        dfx = self.entryDxFunction.get().strip()
+
+        if not fx or not gx or not dfx:
+            messagebox.showwarning("Aviso", "Por favor, preencha todos os campos.\nSe não tiver uma função específica, insira 'x' ou '0' apenas para não deixar vazio.", parent=self.window)
+            return
+
+        self.parentApp.setManualFunctions(fx, gx, dfx)
+        self.window.destroy()
+
 class InterfaceApp:
     def __init__(self, root):
         self.root = root
@@ -172,9 +217,12 @@ class InterfaceApp:
         self.insertBHeadquarter = None
         self.x0Vector = None
         self.x0VectorSize = 0
-
         
         self.rootFilePath = None
+
+        self.manualFx = None
+        self.manualGx = None
+        self.manualDfx = None
 
         style = ttk.Style(self.root)
         style.theme_use('clam') 
@@ -211,6 +259,9 @@ class InterfaceApp:
         
         self.rootFileBtn = ttk.Button(fileFrame, text="Carregar arquivo...", command=self.openRootFileWindow)
         self.rootFileBtn.pack(side='left')
+
+        self.manualFuncBtn = ttk.Button(fileFrame, text="Adicionar funções", command=self.openFunctionEntryWindow)
+        self.manualFuncBtn.pack(side='left', padx=10)
         
         self.infoRootBtn = ttk.Button(fileFrame, text="i", command=self.showRootInfo, width=2)
         self.infoRootBtn.pack(side='left', padx=5)
@@ -456,8 +507,6 @@ class InterfaceApp:
                         tolerance = float(self.setTolerance.get())
                         maxIter = int(self.setIterations.get())
 
-                        le.gaussJacobiConvergence(ACalc.copy())
-                        
                         finalResult = le.gaussJacobi(ACalc.copy(), BCalc.copy(), tolerance, maxIter, xk=self.initialVector)
                         
                     except ValueError:
@@ -469,8 +518,6 @@ class InterfaceApp:
                         tolerance = float(self.setTolerance.get())
                         maxIter = int(self.setIterations.get())
 
-                        le.sassenfeld(ACalc.copy()) 
-                        
                         finalResult = le.gaussSeidel(ACalc.copy(), BCalc.copy(), tolerance, maxIter, xk=self.initialVector)
                         
                     except ValueError:
@@ -505,6 +552,19 @@ class InterfaceApp:
         else:
             self.selectedRootFileLabel.config(text="Nenhum arquivo carregado.")
 
+    def openFunctionEntryWindow(self):
+        self.functionPopup = FunctionEntryWindow(self)
+
+    def setManualFunctions(self, fx, gx, dfx):
+        self.manualFx = fx
+        self.manualGx = gx
+        self.manualDfx = dfx
+        
+        self.selectRootFilePath = None
+        
+        self.selectedRootFileLabel.config(text="Funções manuais carregadas.")
+        print(f"Funções Manuais Recebidas:\nf(x)={fx}\ng(x)={gx}\nf'(x)={dfx}")
+
     def showRootInfo(self):
         messagebox.showinfo(
             "Formato do arquivo de funções",
@@ -516,55 +576,92 @@ class InterfaceApp:
         )
 
     def calculateRoots(self):
-        self.rootResultText.config(state="normal")
-        self.rootResultText.delete(1.0, "end")
+            self.rootResultText.config(state="normal")
+            self.rootResultText.delete(1.0, "end")
 
-        if not self.rootFilePath:
-            self.rootResultText.insert("end", "ERRO: Nenhum arquivo de funções foi carregado.")
-            self.rootResultText.config(state="disabled")
-            return
-        
-        try:
-            a = float(self.setRootA.get())
-            b = float(self.setRootB.get())
-            precisao = float(self.setRootPrecision.get())
-            maxIt = int(self.setRootMaxIt.get())
-        except ValueError:
-            self.rootResultText.insert("end", "ERRO: Verifique se 'a', 'b', 'precisao' e 'maxIt' são números válidos.")
-            self.rootResultText.config(state="disabled")
-            return
-        
-        rootStdout = io.StringIO()
-        try:
-            with redirect_stdout(rootStdout):
-                formula, formulaIter, formulaDer = rt.openFile(self.rootFilePath)
-            
-            if formula is None:
-                self.rootResultText.insert("end", rootStdout.getvalue())
+            finalFormula = ""
+            finalIt = ""
+            finalDfx = ""
+            origin = ""
+
+            if self.manualFx and self.manualGx and self.manualDfx:
+                try:
+                    finalFormula = rt.padronizar(self.manualFx)
+                    finalIt = rt.padronizar(self.manualGx)
+                    finalDfx = rt.padronizar(self.manualDfx)
+                    origin = "Entrada Manual"
+                except Exception as e:
+                    self.rootResultText.insert("end", f"ERRO ao processar funções manuais: {e}")
+                    self.rootResultText.config(state="disabled")
+                    return
+
+            elif self.rootFilePath:
+                fStdout = io.StringIO()
+                try:
+                    with redirect_stdout(fStdout):
+                        finalFormula, finalIt, finalDfx = rt.openFile(self.rootFilePath)
+                except Exception as e:
+                    self.rootResultText.insert("end", f"Erro fatal ao ler arquivo: {e}")
+                    return
+                
+                if finalFormula is None:
+                    self.rootResultText.insert("end", fStdout.getvalue())
+                    self.rootResultText.config(state="disabled")
+                    return
+                origin = f"Arquivo: {self.rootFilePath.split('/')[-1]}"
+                
+            else:
+                self.rootResultText.insert("end", "ERRO: Nenhuma função carregada (Arquivo ou Manual).")
                 self.rootResultText.config(state="disabled")
                 return
             
-            self.rootResultText.insert("end", f"Arquivo '{self.rootFilePath.split('/')[-1]}' carregado.\n")
-            self.rootResultText.insert("end", f"Calculando com a={a}, b={b}, precisao={precisao}, maxIt={maxIt}\n")
-            
-            with redirect_stdout(rootStdout):
-                rt.allMethods(a, b, precisao, maxIt, formula, formulaIter, formulaDer)
-            
-            output = rootStdout.getvalue()
-            
             try:
-                with open("resultados.txt", 'w', encoding='utf-8') as f_out:
-                    f_out.write(output)
-                self.rootResultText.insert("end", "\n--- Resultados Salvos em 'resultados.txt' ---\n")
-            except Exception as e:
-                self.rootResultText.insert("end", f"\n--- ERRO AO SALVAR ARQUIVO: {e} ---\n")
-
-            self.rootResultText.insert("end", output)
+                a = float(self.setRootA.get())
+                b = float(self.setRootB.get())
+                precision = float(self.setRootPrecision.get())
+                maxIt = int(self.setRootMaxIt.get())
+            except ValueError:
+                self.rootResultText.insert("end", "ERRO: Verifique se 'a', 'b', 'precision' e 'maxIt' são números válidos.")
+                self.rootResultText.config(state="disabled")
+                return
             
-        except Exception as e:
-            self.rootResultText.insert("end", f"\n--- ERRO DURANTE O CÁLCULO ---\n{type(e).__name__}: {e}")
+            rootStdout = io.StringIO()
+            self.rootResultText.insert("end", f"origem: {origin}\n")
+            self.rootResultText.insert("end", f"Calculando com a={a}, b={b}, precision={precision}, maxIt={maxIt}\n")
 
-        self.rootResultText.config(state="disabled")
+            try:
+                with redirect_stdout(rootStdout):
+                    rt.allMethods(a, b, precision, maxIt, finalFormula, finalIt, finalDfx)
+                
+                output = rootStdout.getvalue()
+                
+                try:
+                    with open("resultados.txt", 'w', encoding='utf-8') as f_out:
+                        f_out.write(output)
+                    self.rootResultText.insert("end", "\n--- Resultados salvos em 'resultados.txt' ---\n")
+                except Exception as e:
+                    self.rootResultText.insert("end", f"\n--- ERRO AO SALVAR ARQUIVO: {e} ---\n")
+
+                self.rootResultText.insert("end", output)
+                
+            except Exception as e:
+                self.rootResultText.insert("end", f"\n--- ERRO DURANTE O CÁLCULO ---\n{type(e).__name__}: {e}")
+
+            self.rootResultText.config(state="disabled")
+
+    def openFunctionEntryWindow(self):
+        self.functionPopup = FunctionEntryWindow(self)
+
+    def setManualFunctions(self, fx, gx, dfx):
+        self.manualFx = fx
+        self.manualGx = gx
+        self.manualDfx = dfx
+        
+        # Limpa o arquivo para evitar conflito
+        self.rootFilePath = None
+        
+        self.selectedRootFileLabel.config(text="Funções manuais carregadas.")
+        print(f"Funções Manuais Recebidas:\n f(x)={fx}\n g(x)={gx}\n f'(x)={dfx}")
 
 if __name__ == "__main__":
     root = tk.Tk()

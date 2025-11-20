@@ -56,6 +56,8 @@ def funcExec(x, formula):
 
 def bissec(a, b, precisao, maxIt, formula):
     k = 0
+    aLimit = a
+    bLimit = b
     print(f"{'Iter (k)':<10} {'a':<18} {'b':<18} {'Erro':<18}")
 
     if(math.fabs(b - a) < precisao):
@@ -82,10 +84,17 @@ def bissec(a, b, precisao, maxIt, formula):
         if k >= maxIt:
             print("A função, provavelmente, e divergente")
         else:
-            print(f"=====A raiz {meio} foi encontrada em {k} iterações")
+            if aLimit < meio and meio < bLimit:
+                print(f"=====A raiz {meio} foi encontrada em {k} iterações")
+                return
+            else:
+                print(f"=====A função provavelmente é divergente")
+                return
 
 def mpf(x0, precisao, maxIt, formula, formulaIter):
     k = 0
+    aLimit = x0
+    bLimit = 100
     print(f"{'Iter (k)':<10} {'x0':<18} {'x1':<18} {'Erro':<18}")
 
     if math.fabs(funcExec(x0, formula)) < precisao:
@@ -96,19 +105,30 @@ def mpf(x0, precisao, maxIt, formula, formulaIter):
     for k in range(1, maxIt + 1):
         x1 = funcExec(x0, formulaIter)
 
+        if x1 is None: 
+            print(f"Erro na iteração {k}: Cálculo de g(x) falhou (possível divisão por zero).")
+            return
+
         print(f"{k:<10} {x0:<18.8f} {x1:<18.8f} {math.fabs(funcExec(x0, formula)):<18.8f}")
 
         if math.fabs(funcExec(x1, formula)) < precisao or math.fabs(x1 - x0) < precisao:
-            print(f"=====A raiz {x1} foi encontrada em {k} iterações")
-            return
+            if aLimit < x1 and x1 < bLimit:
+                print(f"=====A raiz {x1} foi encontrada em {k} iterações")
+                return
+            else:
+                print(f"=====A função provavelmente é divergente")
+                return
 
         x0 = x1 
 
     if k >= maxIt:
         print("A função, provavelmente, e divergente")
 
-def newton(x0, precisao, maxIt, formula, formulaDer):
+def newton(x0, x1, precisao, maxIt, formula, formulaDer):
     k = 0
+    x0 = (x0 + x1) /2
+    aLimit = x0
+    bLimit = x1
     print(f"{'Iter (k)':<10} {'x0':<18} {'x1':<18} {'Erro':<18}")
 
     if math.fabs(funcExec(x0, formula)) < precisao:
@@ -122,8 +142,12 @@ def newton(x0, precisao, maxIt, formula, formulaDer):
         print(f"{k:<10} {x0:<18.8f} {x1:<18.8f} {math.fabs(funcExec(x0, formula)):<18.8f}")
 
         if math.fabs(funcExec(x1, formula)) < precisao or math.fabs(x1 - x0) < precisao:
-            print(f"=====A raiz {x1} foi encontrada em {k} iterações")
-            return
+            if aLimit < x1 and x1 < bLimit:
+                print(f"=====A raiz {x1} foi encontrada em {k} iterações")
+                return
+            else:
+                print(f"=====A função provavelmente é divergente")
+                return
 
         x0 = x1
 
@@ -132,6 +156,8 @@ def newton(x0, precisao, maxIt, formula, formulaDer):
 
 def secante(x0, x1, precisao, maxIt, formula):
     k = 0
+    aLimit = x0
+    bLimit = x1
     print(f"{'Iter (k)':<10} {'x0':<18} {'x1':<18} {'Erro':<18}")
     
     if math.fabs(funcExec(x0, formula)) < precisao:
@@ -150,8 +176,12 @@ def secante(x0, x1, precisao, maxIt, formula):
         print(f"{k:<10} {x0:<18.8f} {x1:<18.8f} {math.fabs(funcExec(x0, formula)):<18.8f}")
 
         if math.fabs(funcExec(x2, formula)) < precisao or math.fabs(x2 - x1) < precisao:
-            print(f"=====A raiz {x2} foi encontrada em {k} iterações")
-            return
+            if aLimit < x2 and x2 < bLimit:
+                print(f"=====A raiz {x2} foi encontrada em {k} iterações")
+                return
+            else:
+                print(f"=====A função provavelmente é divergente")
+                return
 
         x0 = x1
         x1 = x2
@@ -161,6 +191,8 @@ def secante(x0, x1, precisao, maxIt, formula):
 
 def regulaFalsi(a, b, precisao, maxIt, formula):
     k = 0
+    aLimit = a
+    bLimit = b
     print(f"{'Iter (k)':<10} {'a':<18} {'b':<18} {'Erro':<18}")
 
     fa = funcExec(a, formula)
@@ -184,8 +216,12 @@ def regulaFalsi(a, b, precisao, maxIt, formula):
         print(f"{k:<10} {a:<18.8f} {b:<18.8f} {math.fabs(funcExec(x, formula)):<18.8f}")
 
         if math.fabs(funcExec(x, formula)) < precisao or math.fabs(x - xAnt) < precisao:
-            print(f"=====A raiz {x} foi encontrada em {k} iterações")
-            return
+            if aLimit < x and x < bLimit:
+                print(f"=====A raiz {x} foi encontrada em {k} iterações")
+                return
+            else:
+                print(f"=====A função provavelmente é divergente")
+                return
 
         if fa * fx < 0:
             b = x
@@ -203,7 +239,7 @@ def allMethods(a, b, precisao, maxIt, formula, formulaIter, formulaDer):
     print("\n---[ Metodo iterativo linear ou metodo do ponto fixo ]--------------------")
     mpf(a, precisao, maxIt, formula, formulaIter)
     print("\n---[ Metodo de Newton ]---------------------------------------------------")
-    newton(a, precisao, maxIt, formula, formulaDer)
+    newton(a, b, precisao, maxIt, formula, formulaDer)
     print("\n---[ Metodo da secante ]--------------------------------------------------")
     secante(a, b, precisao, maxIt, formula)
     print("\n---[ Metodo da regula-falsi ]--------------------------------------------------")

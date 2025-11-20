@@ -1,7 +1,15 @@
 #Resultado: Aproximadamente 1.4474105834960938
-e^(-x^2) - cos(x)
-cos(x) - e^(-x^2) + x
-sen(x) - 2xe^(-x^2)
+#e^(-x^2) - cos(x)
+#cos(x) - e^(-x^2) + x
+#sen(x) - 2xe^(-x^2)
+
+#e^x - x - 2
+#e^x - 2
+#e^x - 1
+
+x*log(x) - 1
+(x + (1 / log(x))) / 2
+log(x) + 1
 
 #Resultado: Aproximadamente 0.73908513
 #cos(x) - x
