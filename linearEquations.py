@@ -76,7 +76,7 @@ def gaussElimination(A, results):
             results[j] = results[j] - results[i] * multiplier
 
     if math.fabs(A[numVariables - 1, numVariables - 1]) < 1.0e-12:
-        return "Pivo final é nulo"
+        return "Pivo final é nulo, logo não é possível calcular por este método"
 
     x[numVariables - 1] = results[numVariables - 1] / A[numVariables - 1, numVariables - 1]
     for i in range(numVariables - 2, -1, -1):
